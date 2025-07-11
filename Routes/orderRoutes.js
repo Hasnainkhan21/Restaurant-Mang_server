@@ -8,12 +8,12 @@ const {
 } = require('../Controller/orderController');
 
 const verifyToken = require('../middlewares/auth');
-const isAdmin = require('../middlewares/isAdmin');
+const checkRole = require('../middlewares/checkRole');
 
 // Routes
-router.post('/placeOrder', verifyToken, placeOrder); // customer or staff
-router.get('/allOrders', verifyToken, isAdmin, getAllOrders); // admin only
-router.put('/updateOrder/:id', verifyToken, isAdmin, updateOrderStatus); // change status
-router.delete('/deleteOrder/:id', verifyToken, isAdmin, deleteOrder); // admin delete
+router.post('/placeOrder', verifyToken, checkRole('admin', 'chef', 'waiter'), placeOrder); // staff can place orders
+router.get('/allOrders', verifyToken, checkRole('admin', 'chef', 'waiter'), getAllOrders); // staff can view all orders
+router.put('/updateOrder/:id', verifyToken, checkRole('admin', 'chef'), updateOrderStatus); // admin & chef can update
+router.delete('/deleteOrder/:id', verifyToken, checkRole('admin'), deleteOrder); // only admin can delete
 
 module.exports = router;

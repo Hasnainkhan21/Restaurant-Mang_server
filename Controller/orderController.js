@@ -9,7 +9,7 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: "All fields required" });
     }
 
-    // 1️⃣ Check stock availability for each menu item
+    //  Check stock availability for each menu item
     for (let item of items) {
       const inventoryItem = await Inventory.findOne({ menuItem: item.menuItem });
 
@@ -30,7 +30,7 @@ exports.placeOrder = async (req, res) => {
       }
     }
 
-    // 2️⃣ Deduct quantity from inventory
+    // Deduct quantity from inventory
     for (let item of items) {
       await Inventory.findOneAndUpdate(
         { menuItem: item.menuItem },
@@ -38,7 +38,7 @@ exports.placeOrder = async (req, res) => {
       );
     }
 
-    // 3️⃣ Create and save order
+    // Create and save order
     const newOrder = new Order({ items, tableNumber });
     await newOrder.save();
 
@@ -68,12 +68,27 @@ exports.updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    const validStatuses = ['Pending', 'Preparing', 'Ready', 'Completed', 'Cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
     const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
-    res.status(200).json(order);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    res.status(200).json({
+      message: 'Order status updated successfully',
+      order
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error('Order update error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 exports.deleteOrder = async (req, res) => {
   try {

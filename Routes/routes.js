@@ -1,27 +1,23 @@
 const express = require('express')
 const router = express.Router();
 const verifyToken = require('../middlewares/auth');
-const isAdmin = require('../middlewares/isAdmin');
+const checkRole = require('../middlewares/checkRole');
 
 
 const {register, login, getAllUser} = require('../Controller/authController');
 const { addMenuItem, getAllMenuItems, updateMenuItem, deleteMenuItem, getMenuItemById } = require('../Controller/menueController');
 
-//user routes
-router.post('/register', register)
-router.post('/login', login)
-router.get('/all', verifyToken, isAdmin, getAllUser);
-
-router.get('/test', (req, res) => {
-  res.send("API is working!");
-});
+// user routes
+router.post('/register', register);
+router.post('/login', login);
+router.get('/all', verifyToken, checkRole('admin'), getAllUser);
 
 // Mounting the menu routes
-router.post('/addMenuItem', verifyToken, isAdmin, addMenuItem);
-router.get('/getAllMenuItems', verifyToken, getAllMenuItems); // open to all logged-in users
-router.put('/updateMenuItem/:id', verifyToken, isAdmin, updateMenuItem);
-router.delete('/deleteMenuItem/:id', verifyToken, isAdmin, deleteMenuItem);
-router.get('/getMenuItemById/:id', verifyToken, getMenuItemById);
+router.post('/addMenuItem', verifyToken, checkRole('admin', 'chef'), addMenuItem);
+router.get('/getAllMenuItems', verifyToken, checkRole('admin', 'chef', 'waiter', 'inventory'), getAllMenuItems);
+router.put('/updateMenuItem/:id', verifyToken, checkRole('admin', 'chef'), updateMenuItem);
+router.delete('/deleteMenuItem/:id', verifyToken, checkRole('admin'), deleteMenuItem);
+router.get('/getMenuItemById/:id', verifyToken, checkRole('admin', 'chef', 'waiter', 'inventory'), getMenuItemById);
 
 
 module.exports = router;
