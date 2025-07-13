@@ -10,7 +10,7 @@ const { addMenuItem, getAllMenuItems, updateMenuItem, deleteMenuItem, getMenuIte
 // user routes
 router.post('/register', register);
 router.post('/login', login);
-router.get('/all', verifyToken, checkRole('admin'), getAllUser);
+router.get('/all', getAllUser);
 
 // Mounting the menu routes
 router.post('/addMenuItem', verifyToken, checkRole('admin', 'chef'), addMenuItem);

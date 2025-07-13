@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const allowedRoles = ['admin', 'chef', 'waiter', 'inventory'];
+    const allowedRoles = ['admin', 'chef', 'waiter', 'inventory', 'user'];
     if (role && !allowedRoles.includes(role.toLowerCase())) {
       return res.status(400).json({ message: 'Invalid role selected' });
     }
@@ -37,7 +37,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role?.toLowerCase() || 'waiter' // default if not provided
+      role: role?.toLowerCase() || 'user'
     });
 
     await newUser.save();
