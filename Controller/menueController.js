@@ -3,29 +3,31 @@ const Menu = require('../Models/Menue');
 // Add a new menu item
 
 exports.addMenuItem = async (req, res) => {
-    try{
-        const { name, price, category, description, image } = req.body;
-        
-        if (!name || !price || !category) {
-            return res.status(400).json({ message: 'Name, price, and category are required' });
-        }
-        
-        const newMenuItem = new Menu({
-            name,
-            price,
-            category,
-            description: description || '',
-            image: image || '' 
-        });
-        
-        await newMenuItem.save();
-        res.status(201).json({ message: 'Menu item added successfully', menuItem: newMenuItem });
+  try {
+    const { name, price, category, description } = req.body;
+    const image = req.file ? req.file.filename : '';
 
-    }catch(error){
-        console.error("Error adding menu item:", error);
-        res.status(500).json({ message: 'Internal server error' });
+    if (!name || !price || !category) {
+      return res.status(400).json({ message: 'Name, price, and category are required' });
     }
-}
+
+    const newMenuItem = new Menu({
+      name,
+      price,
+      category,
+      description: description || '',
+      image
+    });
+
+    await newMenuItem.save();
+    res.status(201).json({ message: 'Menu item added successfully', menuItem: newMenuItem });
+
+  } catch (error) {
+    console.error("Error adding menu item:", error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 
 // Get all menu items
 exports.getAllMenuItems = async (req, res) => {
