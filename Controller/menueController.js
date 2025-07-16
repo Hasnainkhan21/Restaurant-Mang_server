@@ -5,6 +5,35 @@ const Menu = require('../Models/Menue');
 exports.addMenuItem = async (req, res) => {
   try {
     const { name, price, category, description } = req.body;
+    let ingredients = [];
+
+    // Parse ingredients properly
+    if (req.body.ingredients) {
+      try {
+        ingredients = JSON.parse(req.body.ingredients);
+
+        // ✅ Validate each ingredient
+        if (!Array.isArray(ingredients)) {
+          return res.status(400).json({ message: 'Ingredients must be an array' });
+        }
+
+        for (const ing of ingredients) {
+          if (
+            !ing.inventoryId ||
+            typeof ing.quantity === 'undefined' ||
+            isNaN(ing.quantity)
+          ) {
+            return res.status(400).json({
+              message: 'Each ingredient must have inventoryId and numeric quantity',
+            });
+          }
+        }
+
+      } catch (e) {
+        return res.status(400).json({ message: 'Invalid ingredients format (should be JSON array)' });
+      }
+    }
+
     const image = req.file ? req.file.filename : '';
 
     if (!name || !price || !category) {
@@ -16,14 +45,19 @@ exports.addMenuItem = async (req, res) => {
       price,
       category,
       description: description || '',
-      image
+      image,
+      ingredients
     });
 
     await newMenuItem.save();
-    res.status(201).json({ message: 'Menu item added successfully', menuItem: newMenuItem });
+
+    res.status(201).json({
+      message: 'Menu item added successfully',
+      menuItem: newMenuItem
+    });
 
   } catch (error) {
-    console.error("Error adding menu item:", error);
+    console.error('Error adding menu item:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -32,7 +66,7 @@ exports.addMenuItem = async (req, res) => {
 // Get all menu items
 exports.getAllMenuItems = async (req, res) => {
     try {
-        const menuItems = await Menu.find();
+        const menuItems = await Menu.find().populate('ingredients.inventoryId');
         res.status(200).json(menuItems);
     } catch (error) {
         console.error("Error fetching menu items:", error);
