@@ -2,16 +2,19 @@ const Order = require('../Models/Order');
 const Inventory = require('../Models/Inventory');
 const Menu = require('../Models/Menue');
 
+
 exports.placeOrder = async (req, res) => {
   try {
     const { items, tableNumber } = req.body;
 
     if (!items || !tableNumber) {
-      return res.status(400).json({ message: "All fields required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Step 1: Check inventory for all menu items
-    for (let item of items) {
+    let totalPrice = 0;
+
+    // Step 1: Validate all menu items and check inventory
+    for (const item of items) {
       const menuItem = await Menu.findById(item.menuItem);
       if (!menuItem) {
         return res.status(404).json({
@@ -20,47 +23,55 @@ exports.placeOrder = async (req, res) => {
         });
       }
 
-      // For each ingredient of the menu item
-      for (let ing of menuItem.ingredients) {
+      totalPrice += menuItem.price * item.quantity;
+
+      // Check each ingredient
+      for (const ing of menuItem.ingredients) {
         const inventoryItem = await Inventory.findById(ing.inventoryId);
         if (!inventoryItem) {
           return res.status(404).json({
-            message: "Menu item ingredient not found in inventory",
-            menuItemId: item.menuItem,
-            inventoryId: ing.inventoryId,
+            message: "Ingredient not found in inventory",
+            ingredientId: ing.inventoryId,
           });
         }
 
         const totalRequired = ing.quantity * item.quantity;
-
         if (inventoryItem.quantity < totalRequired) {
           return res.status(400).json({
             message: "Not enough stock for ingredient",
             ingredient: inventoryItem.name,
             available: inventoryItem.quantity,
             required: totalRequired,
-            menuItemId: item.menuItem,
           });
         }
       }
     }
 
     // Step 2: Deduct inventory
-    for (let item of items) {
+    for (const item of items) {
       const menuItem = await Menu.findById(item.menuItem);
-      for (let ing of menuItem.ingredients) {
+      for (const ing of menuItem.ingredients) {
         const totalRequired = ing.quantity * item.quantity;
         await Inventory.findByIdAndUpdate(
           ing.inventoryId,
-          { $inc: { quantity: -totalRequired }, $set: { lastUpdated: new Date() } }
+          {
+            $inc: { quantity: -totalRequired },
+            $set: { lastUpdated: new Date() },
+          }
         );
       }
     }
 
-    // Step 3: Save order
-    const newOrder = new Order({ items, tableNumber });
-    await newOrder.save();
+    // Step 3: Save the order
+    const newOrder = new Order({
+      items,
+      tableNumber,
+      totalPrice,
+      status: "Pending", // optional: default status
+      user: req.userId || null, // attach user ID if needed
+    });
 
+    await newOrder.save();
     res.status(201).json({
       message: "Order placed and inventory updated",
       order: newOrder,
@@ -71,6 +82,7 @@ exports.placeOrder = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // Get all orders with populated menu items
 const { io } = require('../server'); 
