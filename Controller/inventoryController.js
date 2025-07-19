@@ -27,7 +27,7 @@ exports.addInventoryItem = async (req, res) => {
 // Get all inventory items
 exports.getAllInventoryItems = async (req, res) => {
     try {
-const items = await Inventory.find().select('name quantity unit'); 
+const items = await Inventory.find().select('name quantity unit threshold'); 
         res.status(200).json(items);
     } catch (error) {
         console.error("Get All Inventory Items error:", error);
