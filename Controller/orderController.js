@@ -1,87 +1,77 @@
 const Order = require('../Models/Order');
 const Inventory = require('../Models/Inventory');
 const Menu = require('../Models/Menue');
+const User = require('../Models/User')
+
 
 
 exports.placeOrder = async (req, res) => {
   try {
-    const { items, tableNumber } = req.body;
+    
+    const { items, tableNumber , customerName} = req.body;
+    const userId = req.user.id; 
 
-    if (!items || !tableNumber) {
-      return res.status(400).json({ message: "All fields are required" });
+    const user = await User.findById(userId);
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Order must contain at least one item' });
+    }
+
+    // Check if all menu items exist
+    for (const item of items) {
+      const menuItem = await Menu.findById(item.menuItem).populate('ingredients.inventoryId');
+      if (!menuItem) {
+        return res.status(404).json({ message: `Menu item not found: ${item.menuItem}` });
+      }
+
+      // Check ingredient stock
+      for (const ingredient of menuItem.ingredients) {
+        const requiredQty = ingredient.quantity * item.quantity;
+
+        if (ingredient.inventoryId.quantity < requiredQty) {
+          return res.status(400).json({
+            message: `Insufficient stock for ingredient ${ingredient.inventoryId.name}`
+          });
+        }
+      }
+    }
+
+    // Deduct stock
+    for (const item of items) {
+      const menuItem = await Menu.findById(item.menuItem).populate('ingredients.inventoryId');
+      for (const ingredient of menuItem.ingredients) {
+        const requiredQty = ingredient.quantity * item.quantity;
+        ingredient.inventoryId.quantity -= requiredQty;
+        await ingredient.inventoryId.save();
+      }
     }
 
     let totalPrice = 0;
+for (const item of items) {
+  const menuItem = await Menu.findById(item.menuItem);
+  totalPrice += menuItem.price * item.quantity;
+}
 
-    // Step 1: Validate all menu items and check inventory
-    for (const item of items) {
-      const menuItem = await Menu.findById(item.menuItem);
-      if (!menuItem) {
-        return res.status(404).json({
-          message: "Menu item not found",
-          menuItemId: item.menuItem,
-        });
-      }
 
-      totalPrice += menuItem.price * item.quantity;
-
-      // Check each ingredient
-      for (const ing of menuItem.ingredients) {
-        const inventoryItem = await Inventory.findById(ing.inventoryId);
-        if (!inventoryItem) {
-          return res.status(404).json({
-            message: "Ingredient not found in inventory",
-            ingredientId: ing.inventoryId,
-          });
-        }
-
-        const totalRequired = ing.quantity * item.quantity;
-        if (inventoryItem.quantity < totalRequired) {
-          return res.status(400).json({
-            message: "Not enough stock for ingredient",
-            ingredient: inventoryItem.name,
-            available: inventoryItem.quantity,
-            required: totalRequired,
-          });
-        }
-      }
-    }
-
-    // Step 2: Deduct inventory
-    for (const item of items) {
-      const menuItem = await Menu.findById(item.menuItem);
-      for (const ing of menuItem.ingredients) {
-        const totalRequired = ing.quantity * item.quantity;
-        await Inventory.findByIdAndUpdate(
-          ing.inventoryId,
-          {
-            $inc: { quantity: -totalRequired },
-            $set: { lastUpdated: new Date() },
-          }
-        );
-      }
-    }
-
-    // Step 3: Save the order
+    // ✅ Create Order
     const newOrder = new Order({
+      user: userId,
+      customerName: user.name,
       items,
       tableNumber,
-      totalPrice,
-      status: "Pending", // optional: default status
-      user: req.userId || null, // attach user ID if needed
+      totalPrice
     });
 
     await newOrder.save();
-    res.status(201).json({
-      message: "Order placed and inventory updated",
-      order: newOrder,
-    });
+
+    res.status(201).json({ message: 'Order placed successfully', order: newOrder });
 
   } catch (error) {
-    console.error("Error placing order:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error('Error placing order:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 
 // Get all orders with populated menu items
@@ -147,7 +137,7 @@ exports.deleteOrder = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
 
     const orders = await Order.find({ user: userId }).populate('items.menuItem', 'name');
     

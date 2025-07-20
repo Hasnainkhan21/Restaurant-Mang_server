@@ -17,7 +17,7 @@ router.get('/all', getAllUser);
 router.post('/addMenuItem', verifyToken, checkRole('admin', 'chef'),upload.single('image'), addMenuItem);
 router.get('/getAllMenuItems', getAllMenuItems);
 router.put('/updateMenuItem/:id', verifyToken, checkRole('admin', 'chef'), updateMenuItem);
-router.delete('/deleteMenuItem/:id', verifyToken, checkRole('admin'), deleteMenuItem);
+router.delete('/deleteMenuItem/:id', verifyToken, checkRole('admin', 'chef'), deleteMenuItem);
 router.get('/getMenuItemById/:id', verifyToken, checkRole('admin', 'chef', 'waiter', 'inventory'), getMenuItemById);
 
 
