@@ -5,13 +5,13 @@ const checkRole = require('../middlewares/checkRole');
 const upload = require('../Configurations/muter');
 
 
-const {register, login, getAllUser} = require('../Controller/authController');
+const {register, login, getAllStaffUsers} = require('../Controller/authController');
 const { addMenuItem, getAllMenuItems, updateMenuItem, deleteMenuItem, getMenuItemById } = require('../Controller/menueController');
 
 // user routes
 router.post('/register', register);
 router.post('/login', login);
-router.get('/all', getAllUser);
+router.get('/all', getAllStaffUsers);
 
 // Mounting the menu routes
 router.post('/addMenuItem', verifyToken, checkRole('admin', 'chef'),upload.single('image'), addMenuItem);

@@ -91,12 +91,14 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.getAllUser = async (req, res) => {
+exports.getAllStaffUsers = async (req, res) => {
   try {
-    const allUsers = await User.find(); 
-    res.status(200).json(allUsers);     
+    const staffRoles = ['admin', 'chef', 'waiter', 'inventory'];
+    const staffUsers = await User.find({ role: { $in: staffRoles } }); 
+    res.status(200).json(staffUsers);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch users', error });
+    res.status(500).json({ message: 'Failed to fetch staff users', error });
   }
 };
+
 
