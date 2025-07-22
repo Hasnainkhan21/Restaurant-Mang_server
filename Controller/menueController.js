@@ -1,4 +1,5 @@
 const Menu = require('../Models/Menue');
+const Inventory = require('../Models/Inventory')
 
 // Add a new menu item
 
@@ -7,12 +8,12 @@ exports.addMenuItem = async (req, res) => {
     const { name, price, category, description } = req.body;
     let ingredients = [];
 
-    // Parse ingredients properly
+   
     if (req.body.ingredients) {
       try {
         ingredients = JSON.parse(req.body.ingredients);
 
-        // ✅ Validate each ingredient
+        
         if (!Array.isArray(ingredients)) {
           return res.status(400).json({ message: 'Ingredients must be an array' });
         }

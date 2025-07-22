@@ -3,9 +3,9 @@ const Inventory = require('../Models/Inventory')
 // Add a new inventory item
 exports.addInventoryItem = async (req, res) => {
     try {
-        const { name, quantity, unit, threshold } = req.body;
+        const { name, quantity, unit, unitPrice, threshold } = req.body;
     
-        if (!name || !quantity || !unit) {
+        if (!name || !quantity || !unit || !unitPrice) {
         return res.status(400).json({ message: 'All fields are required' });
         }
     
@@ -13,7 +13,8 @@ exports.addInventoryItem = async (req, res) => {
         name,
         quantity,
         unit,
-        threshold: threshold || 5 // default threshold if not provided
+        unitPrice,
+        threshold: threshold || 5 
         });
     
         await newItem.save();
@@ -27,7 +28,7 @@ exports.addInventoryItem = async (req, res) => {
 // Get all inventory items
 exports.getAllInventoryItems = async (req, res) => {
     try {
-const items = await Inventory.find().select('name quantity unit threshold'); 
+const items = await Inventory.find().select('name quantity unit unitPrice threshold'); 
         res.status(200).json(items);
     } catch (error) {
         console.error("Get All Inventory Items error:", error);
