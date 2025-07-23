@@ -17,14 +17,12 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: 'Order must contain at least one item' });
     }
 
-    // Check if all menu items exist
     for (const item of items) {
       const menuItem = await Menu.findById(item.menuItem).populate('ingredients.inventoryId');
       if (!menuItem) {
         return res.status(404).json({ message: `Menu item not found: ${item.menuItem}` });
       }
 
-      // Check ingredient stock
       for (const ingredient of menuItem.ingredients) {
         const requiredQty = ingredient.quantity * item.quantity;
 
@@ -53,7 +51,7 @@ for (const item of items) {
 }
 
 
-    // ✅ Create Order
+    // Create Order
     const newOrder = new Order({
       user: userId,
       customerName: user.name,
@@ -74,7 +72,7 @@ for (const item of items) {
 
 
 
-// Get all orders with populated menu items
+// Get all orders
 const { io } = require('../server'); 
 exports.getAllOrders = async (req, res) => {
   try {
@@ -98,7 +96,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    // ✅ Update the order by ID
+    //  Update order
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
       { status: formattedStatus },
@@ -109,8 +107,8 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // ✅ Emit only the updated order
-    const { io } = require('../server'); // Make sure io is exported correctly
+    // Emit updated order
+    const { io } = require('../server'); 
     io.emit('orderStatusUpdated', updatedOrder);
 
     res.status(200).json({
@@ -141,7 +139,7 @@ exports.getUserOrders = async (req, res) => {
 
     const orders = await Order.find({ user: userId }).populate('items.menuItem', 'name');
     
-    // Format item names for display
+
     const formattedOrders = orders.map(order => ({
       ...order.toObject(),
       items: order.items.map(i => ({

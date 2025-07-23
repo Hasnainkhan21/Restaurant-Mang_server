@@ -5,6 +5,6 @@ const verifyToken = require('../middlewares/auth');
 const CheckRole = require('../middlewares/CheckRole');
 
 // Route to get analytics summary
-router.get('/summary', verifyToken, CheckRole('admin', 'chef', 'waiter', 'inventory'), getSummary);
+router.get('/summary', getSummary);
 
 module.exports = router;

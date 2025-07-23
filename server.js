@@ -8,7 +8,6 @@ const connectDB = require('./Configurations/db');
 const userRoutes = require('./Routes/routes');
 const inventoryRoutes = require('./Routes/inventoryRoutes');
 const orderRoutes = require('./Routes/orderRoutes');
-const dashboardRoutes = require('./Routes/dashboardRoutes');
 const path = require('path');
 const analyticsRoutes = require('.//Routes/analyticsRoutes');
 
@@ -38,7 +37,7 @@ app.use(express.json());
 app.use('/api/v0/users', userRoutes);
 app.use('/api/v0/inventory', inventoryRoutes); 
 app.use('/api/v0/orders', orderRoutes);
-app.use('/api/v0/dashboard', dashboardRoutes);
+// app.use('/api/v0/dashboard', dashboardRoutes);
 app.use('/api/v0/analytics', analyticsRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

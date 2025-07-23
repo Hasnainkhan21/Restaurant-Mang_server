@@ -20,6 +20,6 @@ router.get('/getAllMenuItems', getAllMenuItems);
 router.put('/updateMenuItem/:id', verifyToken, checkRole('admin', 'chef'), updateMenuItem);
 router.delete('/deleteMenuItem/:id', verifyToken, checkRole('admin', 'chef'), deleteMenuItem);
 router.get('/getMenuItemById/:id', verifyToken, checkRole('admin', 'chef', 'waiter', 'inventory'), getMenuItemById);
-router.get('/item-profit', itemProfit);
+router.get('/item-profit',verifyToken,checkRole('admin'), itemProfit);
 
 module.exports = router;
